@@ -39,6 +39,11 @@ router.post("/register", async(req,res) => {
 })
 
 router.post("/login", async (req,res) => {
+    console.log("================================");
+console.log("LOGIN REQUEST RECEIVED");
+console.log("Username:", req.body.username);
+console.log("Time:", new Date().toISOString());
+console.log("================================");
     const { username, password } = req.body
     try {
         const user = await User.findOne({ username })
