@@ -10,7 +10,41 @@ dotenv.config()
 
 const app = express()
 
-app.use(cors())
+const defaultAllowedOrigins = [
+  process.env.CLIENT_ORIGIN,
+  process.env.FRONTEND_URL,
+  "https://chat-app-frontend-beige-kappa.vercel.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean)
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true
+  if (defaultAllowedOrigins.includes(origin)) return true
+
+  try {
+    const parsed = new URL(origin)
+    return (
+      parsed.hostname === "localhost" ||
+      parsed.hostname === "127.0.0.1" ||
+      parsed.hostname.endsWith(".vercel.app")
+    )
+  } catch (error) {
+    return false
+  }
+}
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (isAllowedOrigin(origin)) return callback(null, true)
+      return callback(new Error(`CORS blocked for origin: ${origin}`))
+    },
+    credentials: true,
+  })
+)
 app.use(express.json())
 
 async function connectMongo() {
@@ -96,4 +130,3 @@ app.get("/users", async (req, res) => {
 })
 
 module.exports = { app, connectMongo }
-

@@ -3,9 +3,40 @@ const { Server } = require("socket.io")
 const Messages = require("./models/Message.js")
 const { app, connectMongo } = require("./app")
 const server = http.createServer(app)
+
+const defaultAllowedOrigins = [
+    process.env.CLIENT_ORIGIN,
+    process.env.FRONTEND_URL,
+    "https://chat-app-frontend-beige-kappa.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+].filter(Boolean)
+
+const isAllowedOrigin = (origin) => {
+    if (!origin) return true
+    if (defaultAllowedOrigins.includes(origin)) return true
+
+    try {
+        const parsed = new URL(origin)
+        return (
+            parsed.hostname === "localhost" ||
+            parsed.hostname === "127.0.0.1" ||
+            parsed.hostname.endsWith(".vercel.app")
+        )
+    } catch (error) {
+        return false
+    }
+}
+
 const io = new Server(server, {
     cors: {
-        origin: "https://chat-app-frontend-beige-kappa.vercel.app"
+        origin(origin, callback) {
+            if (isAllowedOrigin(origin)) return callback(null, true)
+            return callback(new Error(`CORS blocked for origin: ${origin}`))
+        },
+        credentials: true,
     },
 })
 
